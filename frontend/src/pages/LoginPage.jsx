@@ -11,13 +11,9 @@ function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await axios.post('http://localhost:5000/login', {
-        username,
-        password
-      });
+      const res = await axios.post('http://localhost:5000/login', { username, password });
 
       if (res.data.success) {
-        // if user is admin
         if (res.data.role.toLowerCase() === 'admin') {
           navigate('/admin');
         } else {
@@ -26,8 +22,8 @@ function LoginPage() {
       } else {
         alert('❌ Login failed: ' + res.data.message);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert('❌ Server error during login.');
     }
   };
@@ -42,16 +38,14 @@ function LoginPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
-        />
-        <br /><br />
+        /><br /><br />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-        />
-        <br /><br />
+        /><br /><br />
         <button type="submit">Login</button>
       </form>
     </div>
@@ -59,4 +53,3 @@ function LoginPage() {
 }
 
 export default LoginPage;
-
