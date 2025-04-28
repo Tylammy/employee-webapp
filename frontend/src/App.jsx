@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-// we'll create AdminDashboard and EmployeeDashboard next
 import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 
@@ -17,3 +16,4 @@ function App() {
 }
 
 export default App;
+
