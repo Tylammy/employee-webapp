@@ -6,10 +6,12 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// middlewares
+app.use(cors()); // allow frontend to talk to backend
+app.use(express.json()); // parse JSON body
+app.use(express.urlencoded({ extended: true })); // parse form data
 
+// connect to MySQL database
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -17,25 +19,32 @@ const db = mysql.createConnection({
   database: process.env.DB_DATABASE,
 });
 
-// test route
+// simple test route
 app.get('/', (req, res) => {
-  res.send('Backend server running!');
+  res.send('✅ Backend server is running!');
 });
 
-// login API
+// login route
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
+  
   const query = 'SELECT role FROM users WHERE username = ? AND password = ?';
+  
   db.execute(query, [username, password], (err, results) => {
-    if (err) return res.status(500).send('Database error');
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).send('Database error.');
+    }
+    
     if (results.length > 0) {
       res.json({ success: true, role: results[0].role });
     } else {
-      res.json({ success: false, message: 'Invalid credentials' });
+      res.json({ success: false, message: 'Invalid credentials.' });
     }
   });
 });
 
+// start the server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`🚀 Server is running on http://localhost:${port}`);
 });
