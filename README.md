@@ -8,6 +8,11 @@ The application supports:
 - Search, update, salary adjustment, and payroll report features
 - Web interface (for extra credit) using Node.js, Express, and HTML
 
+## Authors
+
+Java console version by: Gauri Saraf (gsaraf1@student.gsu.edu) and Tahia Islam (tislam8@student.gsu.edu)
+Web version (Node.js + HTML) by: Christy Lam (clam12@student.gsu.edu) and Ethan Nuwagaba (enuwagaba1@student.gsu.edu)
+
 ## Project Structure
 
 employee-webapp/
