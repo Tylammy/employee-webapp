@@ -51,3 +51,26 @@ app.post('/login', (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
+
+
+// Route: Get all employees (admin view)
+app.get('/api/employees', (req, res) => {
+  const query = `
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary,
+           jt.job_title, d.Name AS division_name
+    FROM employees e
+    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    LEFT JOIN employee_division ed ON e.empid = ed.empid
+    LEFT JOIN division d ON ed.div_ID = d.ID
+    ORDER BY e.empid;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching employees:', err);
+      return res.status(500).json({ error: 'Failed to retrieve employees' });
+    }
+    res.json(results);
+  });
+});
