@@ -104,8 +104,8 @@ Tools: DBeaver, dotenv, Git
 
 ## Authors
 
-Java console version by: [Your Team]
-Web version (Node.js + HTML) by: [Your Name]
+Java console version by: Gauri Saraf (gsaraf1@student.gsu.edu) and Tahia Islam (tislam8@student.gsu.edu)
+Web version (Node.js + HTML) by: Christy Lam (clam12@student.gsu.edu) and Ethan Nuwagaba (enuwagaba1@student.gsu.edu)
 
 ## Notes
 
