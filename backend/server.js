@@ -11,19 +11,25 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Use CORS and JSON body parsing middleware
-app.use(cors());
+// CORS setup
+const corsOptions = {
+  origin: 'http://localhost:3001', // React dev server
+  credentials: true, // if you're using cookies or auth headers
+};
+app.use(cors(corsOptions));
+
+// Middleware to parse JSON bodies
 app.use(express.json());
 
 // Create a MySQL connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,        // ex: localhost
-  user: process.env.DB_USER,         // ex: root
-  password: process.env.DB_PASSWORD, // ex: your MySQL password
-  database: process.env.DB_DATABASE  // ex: employeeData
+  host: process.env.DB_HOST,        // e.g. localhost
+  user: process.env.DB_USER,        // e.g. root
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE // e.g. employeeData
 });
 
-// Test if backend server is running
+// Test backend route
 app.get('/', (req, res) => {
   res.send('✅ Backend server is running!');
 });
@@ -47,7 +53,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Start server
+// Start the server
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
