@@ -49,18 +49,10 @@ app.post('/login', (req, res) => {
 });
 
 // Route: Get all employees (admin view)
-app.get('/api/employees/full', (req, res) => {
-  const sql = `
-    SELECT 
-      e.empid, 
-      e.Fname, 
-      e.Lname, 
-      e.email, 
-      e.HireDate, 
-      e.Salary, 
-      CONCAT('***-**-', RIGHT(e.SSN, 4)) AS SSN,
-      jt.job_title, 
-      d.Name AS division_name
+app.get('/api/employees', (req, res) => {
+  const query = `
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary,
+           jt.job_title, d.Name AS division_name
     FROM employees e
     LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
     LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
@@ -69,14 +61,15 @@ app.get('/api/employees/full', (req, res) => {
     ORDER BY e.empid;
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(query, (err, results) => {
     if (err) {
-      console.error('❌ Error retrieving employees:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Error fetching employees:', err);
+      return res.status(500).json({ error: 'Failed to retrieve employees' });
     }
     res.json(results);
   });
 });
+<<<<<<< HEAD
 
 // Route: Search for employees (admin view)
 app.get('/api/employees/search', (req, res) => {
@@ -297,3 +290,5 @@ app.get('/api/employee/:username', (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
+=======
+>>>>>>> parent of e2e6300 (add pages)
