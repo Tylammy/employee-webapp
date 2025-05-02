@@ -13,8 +13,9 @@ function LoginPage() {
     try {
       const res = await axios.post('/login', { username, password }); // ✅ proxy handles domain
 
-      if (res.data.success) {
-        if (res.data.role.toLowerCase() === 'admin') {
+      if (data.success) {
+        localStorage.setItem('username', username); // 🔐 Save for employee info use
+        if (data.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/employee');

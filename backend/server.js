@@ -48,11 +48,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
-});
-
-
 // Route: Get all employees (admin view)
 app.get('/api/employees/full', (req, res) => {
   const sql = `
@@ -268,36 +263,37 @@ app.delete('/api/employees/:empid', (req, res) => {
   });
 });
 
-// Naviation Bar
-import React from 'react';
-import { Link } from 'react-router-dom';
+app.get('/api/employee/:username', (req, res) => {
+  const username = req.params.username;
 
-function AdminNavbar() {
-  return (
-    <nav className="bg-gray-800 text-white px-6 py-4 flex flex-wrap gap-4 items-center">
-      <Link to="/admin" className="hover:underline font-bold">
-        🏠 Dashboard
-      </Link>
-      <Link to="/admin/employees" className="hover:underline">
-        👥 View Employees
-      </Link>
-      <Link to="/admin/search" className="hover:underline">
-        🔍 Search
-      </Link>
-      <Link to="/admin/update" className="hover:underline">
-        ✏️ Update
-      </Link>
-      <Link to="/admin/salary-adjust" className="hover:underline">
-        📈 Adjust Salaries
-      </Link>
-      <Link to="/admin/payroll-report" className="hover:underline">
-        📊 Payroll
-      </Link>
-      <Link to="/admin/delete" className="hover:underline">
-        🗑️ Delete
-      </Link>
-    </nav>
-  );
-}
+  const sql = `
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary,
+           jt.job_title, d.Name AS division_name, RIGHT(e.SSN, 4) AS last4SSN
+    FROM users u
+    JOIN employees e ON u.username = e.email OR u.username = e.empid
+    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    LEFT JOIN employee_division ed ON e.empid = ed.empid
+    LEFT JOIN division d ON ed.div_ID = d.ID
+    WHERE u.username = ?
+    LIMIT 1;
+  `;
 
-export default AdminNavbar;
+  db.query(sql, [username], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching employee info:', err);
+      return res.status(500).json({ error: 'Failed to fetch employee info' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+// ✅ 👇 move this to the bottom — last line in the file
+app.listen(port, () => {
+  console.log(`🚀 Server running on http://localhost:${port}`);
+});
