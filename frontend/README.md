@@ -1,70 +1,112 @@
-# Getting Started with Create React App
+# Employee Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a full-featured employee management system designed for Company Z. It provides both a Java console interface and a web-based interface (Node.js + HTML) connected to a shared MySQL database.
 
-## Available Scripts
+The application supports:
+- Admin login with full CRUD access
+- Employee login with read-only access to personal data
+- Search, update, salary adjustment, and payroll report features
+- Web interface (for extra credit) using Node.js, Express, and HTML
 
-In the project directory, you can run:
+## Project Structure
 
-### `npm start`
+employee-webapp/
+- backend/              Node.js + Express API (for web version)
+- frontend/             HTML, CSS, and JavaScript (for web version)
+- java-console/         Terminal interface (Main.java)
+- database-scripts/     SQL scripts to set up MySQL schema + test data
+- README.md
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Console Version (Java)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Built in Main.java using JDBC and the Scanner class
+- Run in terminal using:
+  cd java-console
+  javac Main.java
+  java Main
+- Supports:
+  - Admin login (CRUD, payroll reports, search)
+  - Employee login (view-only access)
+- Uses .env for database credentials (requires dotenv-java)
 
-### `npm test`
+## Web Version (Node.js + HTML) - Extra Credit
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Fully working web interface with login, dashboards, and data views
+- Frontend: plain HTML/CSS/JavaScript
+- Backend: Node.js + Express (backend/server.js)
+- Connects to the same MySQL database as the Java version
 
-### `npm run build`
+To run the web version:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Install dependencies:
+   cd backend
+   npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Start the server:
+   npm start
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Open the site in your browser:
+   http://localhost:3001
 
-### `npm run eject`
+## Database Setup
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Open MySQL (via DBeaver or CLI)
+2. Run the following SQL scripts in order from the database-scripts folder:
+   - employee_databas_MySQL_create.sql
+   - employeeData_INSERT_datum.sql
+   - employeeData_foreignKeys.sql
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Test Users
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Role: Admin
+Username: admin1
+Password: adminpass
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Role: Employee
+Username: emp1
+Password: emppass
 
-## Learn More
+## Features Implemented
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Admin:
+- Full login and dashboard access
+- Search employees by name, DOB, ID, or SSN
+- Update employee information (salary, job title, division)
+- Apply salary adjustments to specific ranges
+- Generate reports:
+  - Payroll history by employee
+  - Total pay by job title or division
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Employee:
+- Secure login
+- View own information (name, salary, job title, division)
+- View own 12-month payroll history
 
-### Code Splitting
+## Extra Credit Justification
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- A working web-based UI using Node.js and Express
+- Login and dashboard functionality mirrors the Java version
+- Utilizes HTTP requests, dynamic rendering, and full database integration
 
-### Analyzing the Bundle Size
+## Tech Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Frontend: HTML, CSS, JavaScript
+Backend: Java Console (JDBC), Node.js + Express
+Database: MySQL
+Tools: DBeaver, dotenv, Git
 
-### Making a Progressive Web App
+## Future Improvements
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- Add session or token-based authentication
+- Style the frontend with Bootstrap or Tailwind
+- Use React for a more dynamic UI
+- Add exportable reports (PDF or CSV)
 
-### Advanced Configuration
+## Authors
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Java console version by: [Your Team]
+Web version (Node.js + HTML) by: [Your Name]
 
-### Deployment
+## Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project satisfies all class requirements and includes an optional full-stack web version to enhance user experience and meet extra credit criteria.

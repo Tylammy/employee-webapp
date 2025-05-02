@@ -11,7 +11,7 @@ function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await axios.post('http://localhost:5000/login', { username, password });
+      const res = await axios.post('/login', { username, password }); // ✅ proxy handles domain
 
       if (res.data.success) {
         if (res.data.role.toLowerCase() === 'admin') {
@@ -23,7 +23,7 @@ function LoginPage() {
         alert('❌ Login failed: ' + res.data.message);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Login error:', err);
       alert('❌ Server error during login.');
     }
   };

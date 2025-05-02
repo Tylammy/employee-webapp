@@ -1,42 +1,35 @@
-// Import required libraries
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
 dotenv.config();
 
-// Create an Express application
 const app = express();
 const port = process.env.PORT || 5000;
 
-// CORS setup
+// Updated CORS setup to match frontend (3001)
 const corsOptions = {
-  origin: 'http://localhost:3000', // React dev server
-  credentials: true, // if you're using cookies or auth headers
+  origin: 'http://localhost:3001',
+  credentials: true,
 };
 app.use(cors(corsOptions));
-
-// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Create a MySQL connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,        // e.g. localhost
-  user: process.env.DB_USER,        // e.g. root
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE // e.g. employeeData
+  database: process.env.DB_DATABASE,
 });
 
-// Test backend route
 app.get('/', (req, res) => {
   res.send('✅ Backend server is running!');
 });
 
-// Login route
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
+  console.log('Login attempt:', username);
 
   const query = 'SELECT role FROM users WHERE username = ? AND password = ?';
   db.execute(query, [username, password], (err, results) => {
@@ -44,6 +37,8 @@ app.post('/login', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).send('Database error');
     }
+
+    console.log('Query results:', results);
 
     if (results.length > 0) {
       res.json({ success: true, role: results[0].role });
@@ -53,7 +48,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
