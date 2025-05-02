@@ -10,70 +10,90 @@ The application supports:
 
 ## Authors
 
-Java console version by: Gauri Saraf (gsaraf1@student.gsu.edu) and Tahia Islam (tislam8@student.gsu.edu)
+Java console version by: Gauri Saraf (gsaraf1@student.gsu.edu) and Tahia Islam (tislam8@student.gsu.edu)  
 Web version (Node.js + HTML) by: Christy Lam (clam12@student.gsu.edu) and Ethan Nuwagaba (enuwagaba1@student.gsu.edu)
 
 ## Project Structure
 
-employee-webapp/
-- backend/              Node.js + Express API (for web version)
-- frontend/             HTML, CSS, and JavaScript (for web version)
-- java-console/         Terminal interface (Main.java)
-- database-scripts/     SQL scripts to set up MySQL schema + test data
-- README.md
+employee-webapp/  
+- backend/              Node.js + Express API (for web version)  
+- frontend/             HTML, CSS, and JavaScript (for web version)  
+- java-console/         Terminal interface (Main.java)  
+- database-scripts/     SQL scripts to set up MySQL schema + test data  
+- lib/                  Contains required .jar files for Java console version  
+- README.md  
 
 ## Console Version (Java)
 
-- Built in Main.java using JDBC and the Scanner class
-- Run in terminal using:
-  cd java-console
-  javac Main.java
-  java Main
-- Supports:
-  - Admin login (CRUD, payroll reports, search)
-  - Employee login (view-only access)
-- Uses .env for database credentials (requires dotenv-java)
+The Java console version is located in the `java-console/` folder and uses two external libraries stored in the `lib/` folder:
+- `dotenv-java-X.X.X.jar` for reading environment variables
+- `mysql-connector-java-X.X.X.jar` for connecting to MySQL
 
-## Web Version (Node.js + HTML) - Extra Credit
+### Environment Setup
 
-- Fully working web interface with login, dashboards, and data views
-- Frontend: plain HTML/CSS/JavaScript
-- Backend: Node.js + Express (backend/server.js)
-- Connects to the same MySQL database as the Java version
+Create a `.env` file inside `java-console/` with the following content:
 
-To run the web version:
+DB_URL=jdbc:mysql://localhost:3306/employeeData
+DB_USER=root
+DB_PASSWORD=your_mysql_password
 
-1. Install dependencies:
+### To Compile (from inside `java-console/`):
+
+javac -cp "../lib/*" -encoding UTF-8 Main.java
+
+### To Run (from inside `java-console/`):
+
+java -cp ".;../lib/*" Main
+
+Note: If you're on Mac or Linux, use `:` instead of `;` in the classpath.
+
+## Web Version (Node.js + HTML) – Extra Credit
+
+The web version is built using plain HTML/CSS/JS with a Node.js + Express backend. It connects to the same MySQL database as the Java console app.
+
+### To Run the Web Version Locally:
+
+1. Navigate to the backend folder:
    cd backend
+
+2. Install required packages:
    npm install
 
-2. Start the server:
+3. Add a `.env` file in the `backend/` folder:
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=your_mysql_password
+   DB_DATABASE=employeeData
+
+4. Start the server:
    npm start
 
-3. Open the site in your browser:
+5. Open the browser and go to:
    http://localhost:3001
 
 ## Database Setup
 
-1. Open MySQL (via DBeaver or CLI)
-2. Run the following SQL scripts in order from the database-scripts folder:
-   - employee_databas_MySQL_create.sql
-   - employeeData_INSERT_datum.sql
-   - employeeData_foreignKeys.sql
+1. Open MySQL via DBeaver or terminal
+2. Run the following scripts from `database-scripts/` in order:
+   - `employee_databas_MySQL_create.sql`
+   - `employeeData_INSERT_datum.sql`
+   - `employeeData_foreignKeys.sql`
+
+Ensure your MySQL server is running on `localhost` and listening on the default port (3306).
 
 ## Test Users
 
-Role: Admin
-Username: admin1
+Admin  
+Username: admin1  
 Password: adminpass
 
-Role: Employee
-Username: emp1
+Employee  
+Username: emp1  
 Password: emppass
 
 ## Features Implemented
 
-Admin:
+### Admin
 - Full login and dashboard access
 - Search employees by name, DOB, ID, or SSN
 - Update employee information (salary, job title, division)
@@ -82,7 +102,7 @@ Admin:
   - Payroll history by employee
   - Total pay by job title or division
 
-Employee:
+### Employee
 - Secure login
 - View own information (name, salary, job title, division)
 - View own 12-month payroll history
@@ -95,10 +115,10 @@ Employee:
 
 ## Tech Stack
 
-Frontend: HTML, CSS, JavaScript
-Backend: Java Console (JDBC), Node.js + Express
-Database: MySQL
-Tools: DBeaver, dotenv, Git
+- Frontend: HTML, CSS, JavaScript
+- Backend: Java Console (JDBC), Node.js + Express
+- Database: MySQL
+- Tools: DBeaver, dotenv, Git
 
 ## Future Improvements
 
@@ -106,11 +126,6 @@ Tools: DBeaver, dotenv, Git
 - Style the frontend with Bootstrap or Tailwind
 - Use React for a more dynamic UI
 - Add exportable reports (PDF or CSV)
-
-## Authors
-
-Java console version by: Gauri Saraf (gsaraf1@student.gsu.edu) and Tahia Islam (tislam8@student.gsu.edu)
-Web version (Node.js + HTML) by: Christy Lam (clam12@student.gsu.edu) and Ethan Nuwagaba (enuwagaba1@student.gsu.edu)
 
 ## Notes
 
