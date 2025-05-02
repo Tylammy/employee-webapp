@@ -1,0 +1,136 @@
+# 🛠️ Employee Login System - Instructions Page (VS Code)
+
+Welcome! This document will guide you step-by-step on how to run the **Java + MySQL Employee Login System** using **VS Code** and **DBeaver**.
+
+---
+
+## ✅ Requirements
+- MySQL Server (running on `localhost:3306`)
+- DBeaver (for managing database)
+- Java JDK
+- VS Code (with Java extensions installed)
+- `mysql-connector-j-9.1.0.jar` placed in a `lib/` folder in the project
+- `dotenv-java-2.3.2.jar` placed in a `lib/` folder. You can download here: https://mvnrepository.com/artifact/io.github.cdimascio/dotenv-java/2.3.2  (Click link and see files, click on .jar file to download)
+---
+
+## 🧱 Step 1: Set Up the Database
+
+1. Open DBeaver and connect to MySQL.
+2. Create the database:
+   ```sql
+   CREATE DATABASE employeeData;
+   ```
+3. Open and run the full SQL file provided (tables + inserts).
+   - This creates and populates:
+     - `users`
+     - `employees`
+     - `payroll`
+     - `division`
+     - `employee_division`
+     - `job_titles`
+     - `employee_job_titles`
+
+> ✅ NOTE: All employee data is cleaned — no duplicates or unused entries like "Emma Johnson".
+
+---
+
+## 👥 Step 2: Login Credentials
+
+### Admin:
+- **Username**: `admin1`
+- **Password**: `adminpass`
+
+### Employee:
+- **Username**: `emp1`
+- **Password**: `emppass`
+
+Employee accounts fetch details by matching `username@example.com` in the `employees.email` column.
+
+---
+
+## 💻 Step 3: Run the Java Program in VS Code
+
+1. Open your Java project folder in VS Code.
+2. Confirm the structure:
+   ```plaintext
+   Software Dev project/
+   ├── lib/
+   │   └── mysql-connector-j-9.1.0.jar
+   |   |___dotenv-java-2.3.2.jar
+   |__.env
+   |── Main.java
+   └── Instructions
+   |__gitignore
+   ```
+Important: 
+- For env file, it should look exactly like this (except for your sql password and user) - no spaces either
+```
+DB_URL=jdbc:mysql://localhost:3306/employeeData
+DB_USER=root
+DB_PASSWORD=your-password
+```
+For gitignore, it should only have this:
+```
+.env
+```
+
+3. Compile and run from Terminal:
+   ```bash
+   javac -cp ".;lib/*" Main.java
+
+   java -cp ".;lib/*" Main
+   ```
+---
+
+## 🔐 Admin Functionality
+
+### View Options:
+Admins are prompted:
+```
+Do you want to:
+1. View all employees
+2. Search by name
+3. Search by HireDate
+4. Search by SSN
+5. Search by empid
+6. Filter by department
+7. Filter by job title
+```
+- Partial match allowed for names.
+- Exact match required for SSN and empid.
+
+### Admin Privileges:
+- Can view **all fields**: `HireDate`, `Salary`, `SSN`, etc.
+- Can **edit** salary, department, job title.
+- **Cannot edit** SSN or empid.
+- Can use full SQL commands (SELECT, INSERT, UPDATE, DELETE).
+- Admins will be asked:
+  ```
+  Do you want to update any employee information? (y/n)
+  If yes → Prompt for SSN or empid
+  Then → Show update menu (salary, job title, division)
+  ```
+
+---
+
+## 👤 Employee View
+```
+Enter username: emp1
+Enter password: emppass
+✅ Login successful. Role: employee
+👤 Welcome Employee. Fetching your data...
+Name: Snoopy Beagle
+Employee ID: 1
+Email: Snoopy@example.com
+HireDate: 2022-08-01
+Salary: $45,000.00
+```
+
+Employees can **only see** their own data.
+
+---
+
+## 🛠️ Troubleshooting
+- **Login failed** → Check `users` table.
+- **No record found** → Ensure matching email exists.
+- **SQL error** → Confirm `USE employeeData;` and proper table setup.
