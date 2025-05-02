@@ -70,6 +70,7 @@ app.get('/api/employees', (req, res) => {
   });
 });
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 // Route: Search for employees (admin view)
 app.get('/api/employees/search', (req, res) => {
@@ -290,5 +291,7 @@ app.get('/api/employee/:username', (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
+=======
+>>>>>>> parent of e2e6300 (add pages)
 =======
 >>>>>>> parent of e2e6300 (add pages)
