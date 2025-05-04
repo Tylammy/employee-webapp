@@ -40,11 +40,14 @@ app.post('/login', (req, res) => {
 
     console.log('Query results:', results);
 
-    if (results.length > 0) {
+    if (results.length === 1) {
       res.json({ success: true, role: results[0].role });
+    } else if (results.length > 1) {
+      console.warn('Multiple users matched — possible data issue.');
+      res.status(500).json({ success: false, message: 'Duplicate users found. Contact admin.' });
     } else {
       res.json({ success: false, message: 'Invalid credentials' });
-    }
+    }    
   });
 });
 
@@ -69,9 +72,6 @@ app.get('/api/employees', (req, res) => {
     res.json(results);
   });
 });
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 // Route: Search for employees (admin view)
 app.get('/api/employees/search', (req, res) => {
@@ -288,13 +288,6 @@ app.get('/api/employee/:username', (req, res) => {
   });
 });
 
-// ✅ 👇 move this to the bottom — last line in the file
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
-=======
->>>>>>> parent of e2e6300 (add pages)
-=======
->>>>>>> parent of e2e6300 (add pages)
-=======
->>>>>>> parent of e2e6300 (add pages)

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import AdminNavbar from './AdminNavbar';
 
 function EmployeeInfo() {
   const [employee, setEmployee] = useState(null);

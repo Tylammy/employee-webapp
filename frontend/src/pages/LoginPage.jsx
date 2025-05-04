@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminNavbar from './AdminNavbar';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -11,26 +12,34 @@ function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await axios.post('/login', { username, password }); // ✅ proxy handles domain
+      const res = await axios.post('http://localhost:5000/login', {
+        username,
+        password,
+      });
+
+      const data = res.data;
 
       if (data.success) {
-        localStorage.setItem('username', username); // 🔐 Save for employee info use
+        localStorage.setItem('username', username); // 🔐 Store for employee info fetch
+
         if (data.role === 'admin') {
           navigate('/admin');
-        } else {
+        } else if (data.role === 'employee') {
           navigate('/employee');
+        } else {
+          alert('⚠️ Unknown role: ' + data.role);
         }
       } else {
-        alert('❌ Login failed: ' + res.data.message);
+        alert('❌ Login failed: ' + (data.message || 'Invalid credentials'));
       }
     } catch (err) {
-      console.error('Login error:', err);
-      alert('❌ Server error during login.');
+      console.error('❌ Server error during login:', err);
+      alert('❌ Server error. Please try again later.');
     }
   };
 
   return (
-    <div style={{ padding: '30px' }}>
+    <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif' }}>
       <h1>Employee Portal Login</h1>
       <form onSubmit={handleLogin}>
         <input
@@ -39,6 +48,7 @@ function LoginPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
+          style={{ padding: '10px', width: '250px' }}
         /><br /><br />
         <input
           type="password"
@@ -46,8 +56,9 @@ function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          style={{ padding: '10px', width: '250px' }}
         /><br /><br />
-        <button type="submit">Login</button>
+        <button type="submit" style={{ padding: '10px 20px' }}>Login</button>
       </form>
     </div>
   );
