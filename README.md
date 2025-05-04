@@ -123,13 +123,6 @@ Password: emppass
 - Database: MySQL
 - Tools: DBeaver, dotenv, Git
 
-## Future Improvements
-
-- Add session or token-based authentication
-- Style the frontend with Bootstrap or Tailwind
-- Use React for a more dynamic UI
-- Add exportable reports (PDF or CSV)
-
 ## Notes
 
 This project satisfies all class requirements and includes an optional full-stack web version to enhance user experience and meet extra credit criteria.
