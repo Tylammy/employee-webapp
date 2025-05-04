@@ -6,32 +6,23 @@ function SearchEmployee() {
   const [lname, setLname] = useState('');
   const [empid, setEmpid] = useState('');
   const [dob, setDob] = useState('');
+  const [ssn, setSsn] = useState('');
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
 
   const handleSearch = async () => {
-    const trimmedFname = fname.trim();
-    const trimmedLname = lname.trim();
-    const trimmedEmpid = empid.trim();
-    const trimmedDob = dob.trim();
-  
-    if (!trimmedFname && !trimmedLname && !trimmedEmpid && !trimmedDob) {
+    if (!fname && !lname && !empid && !dob && !ssn) {
       setError('⚠️ Please enter at least one search field.');
       setResults([]);
       return;
     }
-  
-    const query = new URLSearchParams({
-      fname: trimmedFname,
-      lname: trimmedLname,
-      empid: trimmedEmpid,
-      dob: trimmedDob
-    }).toString();
-  
+
+    const query = new URLSearchParams({ fname, lname, empid, dob, ssn }).toString();
+
     try {
       const res = await fetch(`http://localhost:5000/api/employees/search?${query}`);
       const data = await res.json();
-  
+
       if (data.length === 0) {
         setError('❌ No employee found.');
         setResults([]);
@@ -44,7 +35,7 @@ function SearchEmployee() {
       setError('❌ Server error. Try again.');
       setResults([]);
     }
-  };  
+  };
 
   return (
     <div className="p-6">
@@ -52,10 +43,11 @@ function SearchEmployee() {
       <h1 className="text-2xl font-bold mb-4">Search Employee</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <input type="text" placeholder="First Name" value={fname} onChange={(e) => setFname(e.target.value)} className="border p-2" />
-        <input type="text" placeholder="Last Name" value={lname} onChange={(e) => setLname(e.target.value)} className="border p-2" />
-        <input type="text" placeholder="Employee ID" value={empid} onChange={(e) => setEmpid(e.target.value)} className="border p-2" />
+        <input type="text" placeholder="First Name" value={fname} onChange={(e) => setFname(e.target.value.trim())} className="border p-2" />
+        <input type="text" placeholder="Last Name" value={lname} onChange={(e) => setLname(e.target.value.trim())} className="border p-2" />
+        <input type="text" placeholder="Employee ID" value={empid} onChange={(e) => setEmpid(e.target.value.trim())} className="border p-2" />
         <input type="date" placeholder="DOB" value={dob} onChange={(e) => setDob(e.target.value)} className="border p-2" />
+        <input type="text" placeholder="SSN" value={ssn} onChange={(e) => setSsn(e.target.value.trim())} className="border p-2" />
       </div>
 
       <button className="bg-blue-600 text-white px-6 py-2 mb-4" onClick={handleSearch}>

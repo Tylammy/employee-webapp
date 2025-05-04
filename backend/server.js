@@ -24,7 +24,7 @@ const db = mysql.createConnection({
 });
 
 app.get('/', (req, res) => {
-  res.send('✅ Backend server is running!');
+  res.send('Backend server is running!');
 });
 
 app.post('/login', (req, res) => {
@@ -64,7 +64,6 @@ app.get('/api/employees', (req, res) => {
     ORDER BY e.empid;
   `;
 
-
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error fetching employees:', err);
@@ -76,30 +75,34 @@ app.get('/api/employees', (req, res) => {
 
 // Route: Search for employees (admin view)
 app.get('/api/employees/search', (req, res) => {
-  const { fname, lname, empid, dob } = req.query;
+  const { fname, lname, empid, dob, ssn } = req.query;
 
   const filters = [];
   const params = [];
 
   if (fname) {
     filters.push("LOWER(e.Fname) LIKE ?");
-    params.push(`%${fname.toLowerCase()}%`);
+    params.push(`%${fname.trim().toLowerCase()}%`);
   }
   if (lname) {
     filters.push("LOWER(e.Lname) LIKE ?");
-    params.push(`%${lname.toLowerCase()}%`);
+    params.push(`%${lname.trim().toLowerCase()}%`);
   }
   if (empid) {
     filters.push("e.empid = ?");
-    params.push(empid);
+    params.push(empid.trim());
   }
   if (dob) {
     filters.push("a.DOB = ?");
-    params.push(dob);
+    params.push(dob.trim());
+  }
+  if (ssn) {
+    filters.push("e.SSN = ?");
+    params.push(ssn.trim());
   }
 
   if (filters.length === 0) {
-    return res.status(400).json({ error: "At least one field is required" });
+    return res.status(400).json({ error: 'At least one search field required' });
   }
 
   const sql = `
@@ -111,51 +114,107 @@ app.get('/api/employees/search', (req, res) => {
     LEFT JOIN employee_division ed ON e.empid = ed.empid
     LEFT JOIN division d ON ed.div_ID = d.ID
     LEFT JOIN address a ON e.empid = a.empid
-    WHERE ${filters.join(" AND ")}
-  `;
+    WHERE ${filters.join(' AND ')}`;
 
   db.query(sql, params, (err, results) => {
     if (err) {
-      console.error("\u274C Error in search route:", err);
-      return res.status(500).json({ error: "Search failed" });
+      console.error('Error in search route:', err);
+      return res.status(500).json({ error: 'Search failed' });
     }
     res.json(results);
   });
 });
 
-// Route: Update employee info (admin view)
+
+// Route: Get employee by flexible criteria (for update search)
+app.get('/api/employee/flex-search', (req, res) => {
+  const { ssn, fname, lname, dob } = req.query;
+  const filters = [];
+  const values = [];
+
+  if (ssn) {
+    filters.push('e.SSN = ?');
+    values.push(ssn);
+  }
+  if (fname) {
+    filters.push('LOWER(e.Fname) LIKE ?');
+    values.push(`%${fname.toLowerCase()}%`);
+  }
+  if (lname) {
+    filters.push('LOWER(e.Lname) LIKE ?');
+    values.push(`%${lname.toLowerCase()}%`);
+  }
+  if (dob) {
+    filters.push('a.DOB = ?');
+    values.push(dob);
+  }
+
+  if (filters.length === 0) return res.status(400).json({ error: 'No search criteria provided' });
+
+  const sql = `
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary, e.SSN,
+           jt.job_title_id, jt.job_title, d.ID as division_id, d.Name as division_name, a.DOB
+    FROM employees e
+    LEFT JOIN address a ON e.empid = a.empid
+    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    LEFT JOIN employee_division ed ON e.empid = ed.empid
+    LEFT JOIN division d ON ed.div_ID = d.ID
+    WHERE ${filters.join(' AND ')}
+    LIMIT 1
+  `;
+
+  db.query(sql, values, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Search failed' });
+    if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
+    res.json(results[0]);
+  });
+});
+
+// Route: Update employee info (only modified fields)
 app.put('/api/employees/update/:empid', (req, res) => {
   const empid = req.params.empid;
   const { salary, job_title_id, division_id } = req.body;
 
-  const updateSalary = `
-    UPDATE employees SET Salary = ? WHERE empid = ?;
-  `;
-  const updateJob = `
-    INSERT INTO employee_job_titles (empid, job_title_id)
-    VALUES (?, ?)
-    ON DUPLICATE KEY UPDATE job_title_id = VALUES(job_title_id);
-  `;
-  const updateDivision = `
-    INSERT INTO employee_division (empid, div_ID)
-    VALUES (?, ?)
-    ON DUPLICATE KEY UPDATE div_ID = VALUES(div_ID);
-  `;
+  const tasks = [];
 
-  db.query(updateSalary, [salary, empid], (err1) => {
-    if (err1) return res.status(500).json({ error: 'Salary update failed' });
+  if (salary !== undefined && salary !== '') {
+    tasks.push(cb => db.query('UPDATE employees SET Salary = ? WHERE empid = ?', [salary, empid], cb));
+  }
+  if (job_title_id !== undefined && job_title_id !== '') {
+    tasks.push(cb => db.query(`
+      INSERT INTO employee_job_titles (empid, job_title_id)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE job_title_id = VALUES(job_title_id)
+    `, [empid, job_title_id], cb));
+  }
+  if (division_id !== undefined && division_id !== '') {
+    tasks.push(cb => db.query(`
+      INSERT INTO employee_division (empid, div_ID)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE div_ID = VALUES(div_ID)
+    `, [empid, division_id], cb));
+  }
 
-    db.query(updateJob, [empid, job_title_id], (err2) => {
-      if (err2) return res.status(500).json({ error: 'Job title update failed' });
+  if (tasks.length === 0) return res.status(400).json({ error: 'No update fields provided' });
 
-      db.query(updateDivision, [empid, division_id], (err3) => {
-        if (err3) return res.status(500).json({ error: 'Division update failed' });
+  let completed = 0;
+  let failed = false;
 
+  tasks.forEach(task => {
+    task((err) => {
+      if (err && !failed) {
+        failed = true;
+        return res.status(500).json({ error: 'Update failed' });
+      }
+      completed++;
+      if (completed === tasks.length && !failed) {
         res.json({ success: true, message: 'Employee updated successfully' });
-      });
+      }
     });
   });
 });
+
 
 // Get all job titles
 app.get('/api/job-titles', (req, res) => {
@@ -175,7 +234,7 @@ app.get('/api/divisions', (req, res) => {
   });
 });
 
-// Route: Adjust salary (admin view)
+// Adjust Salary in Range (Admin Only)
 app.put('/api/employees/adjust-salary', (req, res) => {
   const { percent, minSalary, maxSalary } = req.body;
   const multiplier = 1 + (percent / 100);
@@ -196,26 +255,7 @@ app.put('/api/employees/adjust-salary', (req, res) => {
   });
 });
 
-app.get('/api/employees/eligible-salary-adjustment', (req, res) => {
-  const { min, max } = req.query;
-
-  const sql = `
-    SELECT empid, Fname, Lname, email, Salary
-    FROM employees
-    WHERE Salary >= ? AND Salary <= ?
-    ORDER BY Salary DESC
-  `;
-
-  db.query(sql, [min, max], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching eligible employees:', err);
-      return res.status(500).json({ error: 'Failed to preview employees' });
-    }
-    res.json(results);
-  });
-});
-
-// Route: Get employee payroll (admin view)
+// a) Payroll history for an employee (admin can pass any empid, employee only sees theirs)
 app.get('/api/payroll/:empid', (req, res) => {
   const empid = req.params.empid;
 
@@ -227,23 +267,48 @@ app.get('/api/payroll/:empid', (req, res) => {
   `;
 
   db.query(sql, [empid], (err, results) => {
-    if (err) {
-      console.error('❌ Payroll fetch error:', err);
-      return res.status(500).json({ error: 'Could not retrieve payroll history' });
-    }
+    if (err) return res.status(500).json({ error: 'Could not retrieve payroll history' });
 
     const formatted = results.map(row => {
-      const totalDeductions =
-        row.fed_tax + row.fed_med + row.fed_SS + row.state_tax + row.retire_401k + row.health_care;
-      const net = row.earnings - totalDeductions;
-
-      return {
-        ...row,
-        net_pay: net
-      };
+      const deductions = row.fed_tax + row.fed_med + row.fed_SS + row.state_tax + row.retire_401k + row.health_care;
+      return { ...row, net_pay: row.earnings - deductions };
     });
 
     res.json(formatted);
+  });
+});
+
+// b) Total pay by job title (Admin Only)
+app.get('/api/report/total-pay/job-title', (req, res) => {
+  const sql = `
+    SELECT jt.job_title, SUM(p.earnings) AS total_earnings
+    FROM payroll p
+    JOIN employees e ON p.empid = e.empid
+    JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    GROUP BY jt.job_title
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch report' });
+    res.json(results);
+  });
+});
+
+// c) Total pay by division (Admin Only)
+app.get('/api/report/total-pay/division', (req, res) => {
+  const sql = `
+    SELECT d.Name AS division, SUM(p.earnings) AS total_earnings
+    FROM payroll p
+    JOIN employees e ON p.empid = e.empid
+    JOIN employee_division ed ON e.empid = ed.empid
+    JOIN division d ON ed.div_ID = d.ID
+    GROUP BY d.Name
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch report' });
+    res.json(results);
   });
 });
 
@@ -301,7 +366,7 @@ app.get('/api/employee/:username', (req, res) => {
 
   db.query(sql, [username], (err, results) => {
     if (err) {
-      console.error('❌ Error fetching employee info:', err);
+      console.error('Error fetching employee info:', err);
       return res.status(500).json({ error: 'Failed to fetch employee info' });
     }
 
@@ -314,5 +379,5 @@ app.get('/api/employee/:username', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
 });
