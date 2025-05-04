@@ -29,25 +29,16 @@ app.get('/', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  console.log('Login attempt:', username);
-
   const query = 'SELECT role FROM users WHERE username = ? AND password = ?';
   db.execute(query, [username, password], (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).send('Database error');
-    }
-
-    console.log('Query results:', results);
-
+    if (err) return res.status(500).send('Database error');
     if (results.length === 1) {
       res.json({ success: true, role: results[0].role });
     } else if (results.length > 1) {
-      console.warn('Multiple users matched — possible data issue.');
       res.status(500).json({ success: false, message: 'Duplicate users found. Contact admin.' });
     } else {
       res.json({ success: false, message: 'Invalid credentials' });
-    }    
+    }
   });
 });
 
@@ -372,6 +363,30 @@ app.delete('/api/employees/:id', (req, res) => {
     });
   });
 });
+
+app.get('/api/employee/email/:email', (req, res) => {
+  const email = req.params.email;
+  const sql = `
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary, e.SSN,
+           jt.job_title_id, jt.job_title, d.ID as division_id, d.Name as division_name, a.DOB,
+           RIGHT(e.SSN, 4) AS last4SSN
+    FROM employees e
+    LEFT JOIN address a ON e.empid = a.empid
+    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    LEFT JOIN employee_division ed ON e.empid = ed.empid
+    LEFT JOIN division d ON ed.div_ID = d.ID
+    WHERE e.email = ?
+    LIMIT 1
+  `;
+
+  db.query(sql, [email], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch employee by email' });
+    if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
+    res.json(results[0]);
+  });
+});
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

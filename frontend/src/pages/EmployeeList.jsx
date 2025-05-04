@@ -1,11 +1,16 @@
-// Updated EmployeeList.jsx
 import React, { useEffect, useState } from 'react';
 import AdminNavbar from '../components/AdminNavbar';
 
 function EmployeeList() {
   const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [jobTitles, setJobTitles] = useState([]);
+  const [divisions, setDivisions] = useState([]);
+  const [selectedJobTitle, setSelectedJobTitle] = useState('');
+  const [selectedDivision, setSelectedDivision] = useState('');
 
   useEffect(() => {
     fetch('http://localhost:5000/api/employees')
@@ -15,6 +20,13 @@ function EmployeeList() {
       })
       .then(data => {
         setEmployees(data);
+        setFilteredEmployees(data);
+
+        const uniqueTitles = [...new Set(data.map(emp => emp.job_title).filter(Boolean))];
+        const uniqueDivisions = [...new Set(data.map(emp => emp.division_name).filter(Boolean))];
+        setJobTitles(uniqueTitles);
+        setDivisions(uniqueDivisions);
+
         setLoading(false);
       })
       .catch(err => {
@@ -24,6 +36,17 @@ function EmployeeList() {
       });
   }, []);
 
+  useEffect(() => {
+    let filtered = [...employees];
+    if (selectedJobTitle) {
+      filtered = filtered.filter(emp => emp.job_title === selectedJobTitle);
+    }
+    if (selectedDivision) {
+      filtered = filtered.filter(emp => emp.division_name === selectedDivision);
+    }
+    setFilteredEmployees(filtered);
+  }, [selectedJobTitle, selectedDivision, employees]);
+
   if (loading) return <div className="p-6">Loading employee data...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (!employees.length) return <div className="p-6">No employees found.</div>;
@@ -32,6 +55,31 @@ function EmployeeList() {
     <div className="p-6">
       <AdminNavbar />
       <h1 className="text-2xl font-bold mb-4">All Employee Details</h1>
+
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <select
+          className="border p-2"
+          value={selectedJobTitle}
+          onChange={(e) => setSelectedJobTitle(e.target.value)}
+        >
+          <option value="">All Job Titles</option>
+          {jobTitles.map((title, idx) => (
+            <option key={idx} value={title}>{title}</option>
+          ))}
+        </select>
+
+        <select
+          className="border p-2"
+          value={selectedDivision}
+          onChange={(e) => setSelectedDivision(e.target.value)}
+        >
+          <option value="">All Divisions</option>
+          {divisions.map((div, idx) => (
+            <option key={idx} value={div}>{div}</option>
+          ))}
+        </select>
+      </div>
+
       <table className="table-auto w-full border border-collapse">
         <thead className="bg-gray-100">
           <tr>
@@ -46,7 +94,7 @@ function EmployeeList() {
           </tr>
         </thead>
         <tbody>
-          {employees.map(emp => {
+          {filteredEmployees.map(emp => {
             const salary = parseFloat(emp.Salary);
             return (
               <tr key={emp.empid}>

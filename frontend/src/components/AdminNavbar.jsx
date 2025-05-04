@@ -1,7 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; 
 
 function AdminNavbar() {
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    sessionStorage.clear();
+    navigate('/');
+  };
+
   return (
     <nav className="bg-gray-800 text-white p-4 mb-6">
       <div className="flex space-x-4">
