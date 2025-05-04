@@ -76,24 +76,48 @@ app.get('/api/employees', (req, res) => {
 
 // Route: Search for employees (admin view)
 app.get('/api/employees/search', (req, res) => {
-  const query = req.query.q;
+  const { fname, lname, empid, dob } = req.query;
+
+  const filters = [];
+  const params = [];
+
+  if (fname) {
+    filters.push("LOWER(e.Fname) LIKE ?");
+    params.push(`%${fname.toLowerCase()}%`);
+  }
+  if (lname) {
+    filters.push("LOWER(e.Lname) LIKE ?");
+    params.push(`%${lname.toLowerCase()}%`);
+  }
+  if (empid) {
+    filters.push("e.empid = ?");
+    params.push(empid);
+  }
+  if (dob) {
+    filters.push("a.DOB = ?");
+    params.push(dob);
+  }
+
+  if (filters.length === 0) {
+    return res.status(400).json({ error: "At least one field is required" });
+  }
 
   const sql = `
-    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary, e.SSN,
-           jt.job_title, d.Name AS division_name
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.Salary, e.SSN,
+           jt.job_title, d.Name AS division_name, a.DOB
     FROM employees e
     LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
     LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
     LEFT JOIN employee_division ed ON e.empid = ed.empid
     LEFT JOIN division d ON ed.div_ID = d.ID
     LEFT JOIN address a ON e.empid = a.empid
-    WHERE e.Fname LIKE ? OR e.Lname LIKE ? OR e.empid = ? OR a.DOB = ?
+    WHERE ${filters.join(" AND ")}
   `;
 
-  db.query(sql, [`%${query}%`, `%${query}%`, query, query], (err, results) => {
+  db.query(sql, params, (err, results) => {
     if (err) {
-      console.error('❌ Error in search route:', err);
-      return res.status(500).json({ error: 'Search failed' });
+      console.error("\u274C Error in search route:", err);
+      return res.status(500).json({ error: "Search failed" });
     }
     res.json(results);
   });
