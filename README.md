@@ -94,8 +94,8 @@ Employee
 Username: emp1  
 Password: emppass
 
-Employee Ex: 
-Username: Snoopy@example.com
+Employee Ex 
+Username: Snoopy@example.com 
 Password: snoopypass
 
 ## Features Implemented
