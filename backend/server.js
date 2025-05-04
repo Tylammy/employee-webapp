@@ -55,7 +55,7 @@ app.post('/login', (req, res) => {
 app.get('/api/employees', (req, res) => {
   const query = `
     SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary,
-           jt.job_title, d.Name AS division_name
+          e.SSN, jt.job_title, d.Name AS division_name
     FROM employees e
     LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
     LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
@@ -63,6 +63,7 @@ app.get('/api/employees', (req, res) => {
     LEFT JOIN division d ON ed.div_ID = d.ID
     ORDER BY e.empid;
   `;
+
 
   db.query(query, (err, results) => {
     if (err) {
