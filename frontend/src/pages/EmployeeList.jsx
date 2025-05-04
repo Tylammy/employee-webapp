@@ -1,6 +1,6 @@
 // ✅ Updated EmployeeList.jsx
 import React, { useEffect, useState } from 'react';
-import AdminNavbar from './AdminNavbar';
+import AdminNavbar from '../components/AdminNavbar';
 
 function EmployeeList() {
   const [employees, setEmployees] = useState([]);

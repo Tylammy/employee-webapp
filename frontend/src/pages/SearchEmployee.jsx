@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AdminNavbar from './AdminNavbar';
+import AdminNavbar from '../components/AdminNavbar';
 
 function SearchEmployee() {
   const [fname, setFname] = useState('');

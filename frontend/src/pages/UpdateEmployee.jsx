@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import AdminNavbar from './AdminNavbar';
+import AdminNavbar from '../components/AdminNavbar';
 
 function UpdateEmployee() {
   const [search, setSearch] = useState({ fname: '', lname: '', dob: '', ssn: '' });

@@ -188,6 +188,7 @@ app.put('/api/employees/update/:empid', (req, res) => {
       ON DUPLICATE KEY UPDATE job_title_id = VALUES(job_title_id)
     `, [empid, job_title_id], cb));
   }
+
   if (division_id !== undefined && division_id !== '') {
     tasks.push(cb => db.query(`
       INSERT INTO employee_division (empid, div_ID)
@@ -202,7 +203,7 @@ app.put('/api/employees/update/:empid', (req, res) => {
   let failed = false;
 
   tasks.forEach(task => {
-    task((err) => {
+    task(err => {
       if (err && !failed) {
         failed = true;
         return res.status(500).json({ error: 'Update failed' });
@@ -215,11 +216,9 @@ app.put('/api/employees/update/:empid', (req, res) => {
   });
 });
 
-
 // Get all job titles
 app.get('/api/job-titles', (req, res) => {
-  const sql = 'SELECT job_title_id, job_title FROM job_titles';
-  db.query(sql, (err, results) => {
+  db.query('SELECT job_title_id, job_title FROM job_titles', (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch job titles' });
     res.json(results);
   });
@@ -227,8 +226,7 @@ app.get('/api/job-titles', (req, res) => {
 
 // Get all divisions
 app.get('/api/divisions', (req, res) => {
-  const sql = 'SELECT ID, Name FROM division';
-  db.query(sql, (err, results) => {
+  db.query('SELECT ID, Name FROM division', (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch divisions' });
     res.json(results);
   });
@@ -255,126 +253,106 @@ app.put('/api/employees/adjust-salary', (req, res) => {
   });
 });
 
-// a) Payroll history for an employee (admin can pass any empid, employee only sees theirs)
-app.get('/api/payroll/:empid', (req, res) => {
-  const empid = req.params.empid;
+// a) Pay history by employee (admin: all, employee: self)
+app.get('/api/payroll-history', (req, res) => {
+  const { role, username, empid } = req.query;
 
-  const sql = `
-    SELECT pay_date, earnings, fed_tax, fed_med, fed_SS, state_tax, retire_401k, health_care
-    FROM payroll
-    WHERE empid = ?
-    ORDER BY pay_date DESC
+  const baseQuery = `
+    SELECT e.empid, e.Fname, e.Lname, jt.job_title, p.pay_date, p.earnings, 
+           p.fed_tax, p.fed_med, p.fed_SS, p.state_tax, p.retire_401k, 
+           p.health_care, 
+           (p.earnings - (p.fed_tax + p.fed_med + p.fed_SS + p.state_tax + p.retire_401k + p.health_care)) AS net_pay
+    FROM payroll p
+    JOIN employees e ON p.empid = e.empid
+    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
   `;
 
-  db.query(sql, [empid], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Could not retrieve payroll history' });
+  const filter = role === 'employee'
+    ? `WHERE e.email = ?`
+    : empid ? `WHERE e.empid = ?` : '';
 
-    const formatted = results.map(row => {
-      const deductions = row.fed_tax + row.fed_med + row.fed_SS + row.state_tax + row.retire_401k + row.health_care;
-      return { ...row, net_pay: row.earnings - deductions };
-    });
+  const query = `${baseQuery} ${filter} ORDER BY e.empid, p.pay_date`;
 
-    res.json(formatted);
+  const param = role === 'employee' ? [username] : empid ? [empid] : [];
+
+  db.query(query, param, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch payroll history' });
+    res.json(results);
   });
 });
 
-// b) Total pay by job title (Admin Only)
-app.get('/api/report/total-pay/job-title', (req, res) => {
-  const sql = `
-    SELECT jt.job_title, SUM(p.earnings) AS total_earnings
+// b) Total pay by job title for a month
+app.get('/api/payroll-jobtitle', (req, res) => {
+  const { month } = req.query;
+  const query = `
+    SELECT jt.job_title, SUM(p.earnings) AS total_pay
     FROM payroll p
-    JOIN employees e ON p.empid = e.empid
-    JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    JOIN employee_job_titles ejt ON p.empid = ejt.empid
     JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    WHERE MONTH(p.pay_date) = ?
     GROUP BY jt.job_title
   `;
-
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch report' });
+  db.query(query, [month], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch pay by job title' });
     res.json(results);
   });
 });
 
-// c) Total pay by division (Admin Only)
-app.get('/api/report/total-pay/division', (req, res) => {
-  const sql = `
-    SELECT d.Name AS division, SUM(p.earnings) AS total_earnings
+// c) Total pay by division for a month
+app.get('/api/payroll-division', (req, res) => {
+  const { month } = req.query;
+  const query = `
+    SELECT d.Name AS division, SUM(p.earnings) AS total_pay
     FROM payroll p
-    JOIN employees e ON p.empid = e.empid
-    JOIN employee_division ed ON e.empid = ed.empid
+    JOIN employee_division ed ON p.empid = ed.empid
     JOIN division d ON ed.div_ID = d.ID
+    WHERE MONTH(p.pay_date) = ?
     GROUP BY d.Name
   `;
-
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch report' });
+  db.query(query, [month], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch pay by division' });
     res.json(results);
   });
 });
 
-// Route: Delete employee (admin view)
-app.delete('/api/employees/:empid', (req, res) => {
-  const empid = req.params.empid;
-
-  // Delete from child tables first (due to foreign key constraints)
-  const deleteJob = 'DELETE FROM employee_job_titles WHERE empid = ?';
-  const deleteDiv = 'DELETE FROM employee_division WHERE empid = ?';
-  const deletePay = 'DELETE FROM payroll WHERE empid = ?';
-  const deleteAddr = 'DELETE FROM address WHERE empid = ?';
-  const deleteEmp = 'DELETE FROM employees WHERE empid = ?';
-
-  db.query(deleteJob, [empid], (err) => {
-    if (err) return res.status(500).json({ error: 'Failed to delete job title' });
-
-    db.query(deleteDiv, [empid], (err) => {
-      if (err) return res.status(500).json({ error: 'Failed to delete division' });
-
-      db.query(deletePay, [empid], (err) => {
-        if (err) return res.status(500).json({ error: 'Failed to delete payroll' });
-
-        db.query(deleteAddr, [empid], (err) => {
-          if (err) return res.status(500).json({ error: 'Failed to delete address' });
-
-          db.query(deleteEmp, [empid], (err, result) => {
-            if (err) return res.status(500).json({ error: 'Failed to delete employee' });
-            if (result.affectedRows === 0) {
-              return res.status(404).json({ error: 'Employee not found' });
-            }
-            res.json({ success: true });
-          });
-        });
-      });
-    });
-  });
-});
-
-app.get('/api/employee/:username', (req, res) => {
-  const username = req.params.username;
+// Route: Get employee by ID
+app.get('/api/employee/:id', (req, res) => {
+  const empid = req.params.id;
 
   const sql = `
-    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary,
-           jt.job_title, d.Name AS division_name, RIGHT(e.SSN, 4) AS last4SSN
-    FROM users u
-    JOIN employees e ON u.username = e.email OR u.username = e.empid
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary, e.SSN,
+           jt.job_title_id, jt.job_title, d.ID as division_id, d.Name as division_name, a.DOB
+    FROM employees e
+    LEFT JOIN address a ON e.empid = a.empid
     LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
     LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
     LEFT JOIN employee_division ed ON e.empid = ed.empid
     LEFT JOIN division d ON ed.div_ID = d.ID
-    WHERE u.username = ?
-    LIMIT 1;
+    WHERE e.empid = ?
+    LIMIT 1
   `;
 
-  db.query(sql, [username], (err, results) => {
+  db.query(sql, [empid], (err, results) => {
     if (err) {
-      console.error('Error fetching employee info:', err);
-      return res.status(500).json({ error: 'Failed to fetch employee info' });
+      console.error('Error fetching employee by ID:', err);
+      return res.status(500).json({ error: 'Failed to fetch employee' });
     }
-
     if (results.length === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
-
     res.json(results[0]);
+  });
+});
+
+app.delete('/api/employees/:id', (req, res) => {
+  const empid = req.params.id;
+  db.query('DELETE FROM employees WHERE empid = ?', [empid], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete employee' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    res.json({ success: true });
   });
 });
 

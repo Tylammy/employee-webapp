@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import AdminNavbar from './AdminNavbar';
+import AdminNavbar from '../components/AdminNavbar';
 
 function EmployeeInfo() {
   const [employee, setEmployee] = useState(null);
@@ -30,6 +30,7 @@ function EmployeeInfo() {
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-xl font-bold mb-4">My Info</h1>
       <ul className="space-y-2">
+      <AdminNavbar />
         <li><strong>Name:</strong> {employee.Fname} {employee.Lname}</li>
         <li><strong>Email:</strong> {employee.email}</li>
         <li><strong>Hire Date:</strong> {employee.HireDate?.substring(0, 10)}</li>
