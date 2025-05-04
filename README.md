@@ -10,11 +10,11 @@ The application supports:
 
 ## Authors
 
-Java console version by: 
+[Java Console Control](https://github.com/katthegreat/employee-database-app) by: 
 Gauri Saraf (gsaraf1@student.gsu.edu) and Tahia Islam (tislam8@student.gsu.edu)  
 
 Web version (Node.js + HTML) by: 
-Christy Lam (clam12@student.gsu.edu) and Ethan Nuwagaba (enuwagaba1@student.gsu.edu)
+Christy Lam (clam12@student.gsu.edu)
 
 ## Project Structure
 
@@ -93,6 +93,10 @@ Password: adminpass
 Employee  
 Username: emp1  
 Password: emppass
+
+Employee Ex: 
+Username: Snoopy@example.com
+Password: snoopypass
 
 ## Features Implemented
 
