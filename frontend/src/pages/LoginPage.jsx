@@ -19,8 +19,8 @@ function LoginPage() {
       const data = res.data;
 
       if (data.success) {
-        localStorage.setItem('username', username); // 🔐 Store for employee info fetch
-
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('username', username);
         if (data.role === 'admin') {
           navigate('/admin');
         } else if (data.role === 'employee') {

@@ -1,22 +1,44 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function EmployeeDashboard() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if (role !== 'employee') {
+      alert('Access denied: You are not authorized to view this page.');
+      navigate('/');
+    }
+  }, [navigate]);
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Welcome, Employee!</h1>
-      <ul className="space-y-4">
-        <li>
-          <Link to="/employee/info" className="text-blue-600 underline">
-            View My Info
-          </Link>
-        </li>
-        <li>
-          <Link to="/employee/payroll" className="text-blue-600 underline">
-            View My Payroll History
-          </Link>
-        </li>
-      </ul>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Employee Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
+        <button
+          className="bg-blue-600 text-white px-6 py-3"
+          onClick={() => navigate('/employee/info')}
+        >
+          My Info
+        </button>
+        <button
+          className="bg-green-600 text-white px-6 py-3"
+          onClick={() => navigate('/employee/payroll')}
+        >
+          Pay History
+        </button>
+        <button
+          className="bg-gray-600 text-white px-6 py-3"
+          onClick={() => {
+            localStorage.clear();
+            navigate('/');
+          }}
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 }

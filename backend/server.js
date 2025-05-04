@@ -172,36 +172,31 @@ app.get('/api/employee/flex-search', (req, res) => {
 });
 
 // Route: Update employee info (only modified fields)
+
 app.put('/api/employees/update/:empid', (req, res) => {
   const empid = req.params.empid;
   const { salary, job_title_id, division_id } = req.body;
-
   const tasks = [];
 
-  if (salary !== undefined && salary !== '') {
+  if (salary !== '') {
     tasks.push(cb => db.query('UPDATE employees SET Salary = ? WHERE empid = ?', [salary, empid], cb));
   }
-  if (job_title_id !== undefined && job_title_id !== '') {
+  if (job_title_id !== '') {
     tasks.push(cb => db.query(`
       INSERT INTO employee_job_titles (empid, job_title_id)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE job_title_id = VALUES(job_title_id)
+      VALUES (?, ?) ON DUPLICATE KEY UPDATE job_title_id = VALUES(job_title_id)
     `, [empid, job_title_id], cb));
   }
-
-  if (division_id !== undefined && division_id !== '') {
+  if (division_id !== '') {
     tasks.push(cb => db.query(`
       INSERT INTO employee_division (empid, div_ID)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE div_ID = VALUES(div_ID)
+      VALUES (?, ?) ON DUPLICATE KEY UPDATE div_ID = VALUES(div_ID)
     `, [empid, division_id], cb));
   }
 
   if (tasks.length === 0) return res.status(400).json({ error: 'No update fields provided' });
 
-  let completed = 0;
-  let failed = false;
-
+  let completed = 0, failed = false;
   tasks.forEach(task => {
     task(err => {
       if (err && !failed) {
@@ -210,7 +205,7 @@ app.put('/api/employees/update/:empid', (req, res) => {
       }
       completed++;
       if (completed === tasks.length && !failed) {
-        res.json({ success: true, message: 'Employee updated successfully' });
+        res.json({ success: true });
       }
     });
   });
@@ -349,10 +344,32 @@ app.delete('/api/employees/:id', (req, res) => {
   const empid = req.params.id;
   db.query('DELETE FROM employees WHERE empid = ?', [empid], (err, result) => {
     if (err) return res.status(500).json({ error: 'Failed to delete employee' });
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Employee not found' });
     res.json({ success: true });
+  });
+});
+
+app.get('/api/employee/email/:email', (req, res) => {
+  const email = req.params.email;
+
+  const sql = `
+    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary, e.SSN,
+           jt.job_title_id, jt.job_title, d.ID as division_id, d.Name as division_name, a.DOB,
+           RIGHT(e.SSN, 4) AS last4SSN
+    FROM employees e
+    LEFT JOIN address a ON e.empid = a.empid
+    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
+    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
+    LEFT JOIN employee_division ed ON e.empid = ed.empid
+    LEFT JOIN division d ON ed.div_ID = d.ID
+    WHERE e.email = ?
+    LIMIT 1
+  `;
+
+  db.query(sql, [email], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch employee by email' });
+    if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
+    res.json(results[0]);
   });
 });
 

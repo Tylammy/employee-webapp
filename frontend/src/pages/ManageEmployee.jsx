@@ -90,7 +90,6 @@ function ManageEmployee() {
               value={form.salary}
               onChange={(e) => setForm({ ...form, salary: e.target.value })}
             />
-
             <select
               className="border p-2 w-full"
               value={form.job_title_id}
@@ -101,7 +100,6 @@ function ManageEmployee() {
                 <option key={j.job_title_id} value={j.job_title_id}>{j.job_title}</option>
               ))}
             </select>
-
             <select
               className="border p-2 w-full"
               value={form.division_id}

@@ -10,7 +10,7 @@ function AdminNavbar() {
         <Link to="/admin/employees" className="hover:underline">Employees</Link>
         <Link to="/admin/salary-adjust" className="hover:underline">Adjust Salaries</Link>
         <Link to="/admin/payroll" className="hover:underline">Payroll</Link>
-        <Link to="/admin/manage-employees" className="hover:underline">Manage Employees</Link>
+        <Link to="/admin/manage-employee" className="hover:underline">Manage Employees</Link>
         </div>
     </nav>
   );

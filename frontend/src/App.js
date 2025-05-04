@@ -8,7 +8,7 @@ import AdjustSalary from './pages/AdjustSalary';
 import EmployeeInfo from './pages/EmployeeInfo';
 import PayrollDashboard from './pages/PayrollDashboard'; 
 import ManageEmployee from './pages/ManageEmployee';
-
+import PayrollHistory from './pages/PayrollHistory';
 
 function App() {
   return (
@@ -23,6 +23,7 @@ function App() {
         <Route path="/employee/info" element={<EmployeeInfo />} />
         <Route path="/admin/payroll" element={<PayrollDashboard />} />
         <Route path="/admin/manage-employee" element={<ManageEmployee />} />
+        <Route path="/employee/payroll" element={<PayrollHistory />} />
         </Routes>
     </Router>
   );
