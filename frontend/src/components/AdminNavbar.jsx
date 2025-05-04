@@ -8,9 +8,10 @@ function AdminNavbar() {
         <Link to="/admin" className="hover:underline">Dashboard</Link>
         <Link to="/admin/search" className="hover:underline">Search</Link>
         <Link to="/admin/manage-employee" className="hover:underline">Manage Employees</Link>
-        <Link to="/admin/employees" className="hover:underline">Employees</Link>
+        <Link to="/admin/employees" className="hover:underline">View Employees</Link>
         <Link to="/admin/salary-adjust" className="hover:underline">Adjust Salaries</Link>
         <Link to="/admin/payroll" className="hover:underline">Payroll</Link>
+        <li><button onClick={handleLogout}>Logout</button></li>
         </div>
     </nav>
   );

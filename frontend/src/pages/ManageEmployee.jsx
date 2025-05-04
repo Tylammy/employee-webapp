@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from '../components/AdminNavbar';
 
 function ManageEmployee() {
-  const [action, setAction] = useState('');
-  const [searchFields, setSearchFields] = useState({ empid: '', fname: '', lname: '', dob: '', ssn: '' });
+  const [mode, setMode] = useState('');
+  const [search, setSearch] = useState({ empid: '', fname: '', lname: '', dob: '', ssn: '' });
   const [employee, setEmployee] = useState(null);
   const [jobTitles, setJobTitles] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [form, setForm] = useState({ salary: '', job_title_id: '', division_id: '' });
-  const [confirmationText, setConfirmationText] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -17,59 +17,71 @@ function ManageEmployee() {
   }, []);
 
   const handleSearch = async () => {
-    const { empid, fname, lname, dob, ssn } = searchFields;
-    const hasInput = empid || fname || lname || dob || ssn;
-    if (!hasInput) {
+    const filled = Object.values(search).some(val => val.trim() !== '');
+    if (!filled) {
       setMessage('Please fill in at least one search field.');
       return;
     }
 
     const params = new URLSearchParams();
-    if (empid) params.append('empid', empid);
-    if (fname) params.append('fname', fname);
-    if (lname) params.append('lname', lname);
-    if (dob) params.append('dob', dob);
-    if (ssn) params.append('ssn', ssn);
+    Object.entries(search).forEach(([key, val]) => {
+      if (val.trim()) params.append(key, val.trim());
+    });
 
-    const res = await fetch(`http://localhost:5000/api/employees/search?${params}`);
-    const data = await res.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      setEmployee(data[0]);
-      setForm({ salary: '', job_title_id: '', division_id: '' });
-      setMessage('');
-    } else {
-      setEmployee(null);
-      setMessage(data.error || 'Employee not found.');
+    try {
+      const res = await fetch(`http://localhost:5000/api/employee/flex-search?${params.toString()}`);
+      const data = await res.json();
+      if (data.empid) {
+        setEmployee(data);
+        setForm({
+          salary: data.Salary,
+          job_title_id: data.job_title_id || '',
+          division_id: data.division_id || '',
+        });
+        setMessage('');
+      } else {
+        setEmployee(null);
+        setMessage(data.error || 'Employee not found.');
+      }
+    } catch {
+      setMessage('Server error during search.');
     }
   };
 
   const handleUpdate = async () => {
-    const res = await fetch(`http://localhost:5000/api/employees/update/${employee.empid}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        salary: parseFloat(form.salary || employee.Salary),
-        job_title_id: form.job_title_id || employee.job_title_id,
-        division_id: form.division_id || employee.division_id,
-      }),
-    });
-    const data = await res.json();
-    setMessage(data.success ? '✅ Employee updated successfully.' : (data.error || 'Update failed.'));
+    const payload = {};
+    if (form.salary !== '' && parseFloat(form.salary) !== parseFloat(employee.Salary)) payload.salary = form.salary;
+    if (form.job_title_id && form.job_title_id !== employee.job_title_id?.toString()) payload.job_title_id = form.job_title_id;
+    if (form.division_id && form.division_id !== employee.division_id?.toString()) payload.division_id = form.division_id;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/employees/update/${employee.empid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setMessage(data.success ? 'Employee updated successfully.' : (data.error || 'Update failed.'));
+    } catch {
+      setMessage('Server error during update.');
+    }
   };
 
   const handleDelete = async () => {
-    const res = await fetch(`http://localhost:5000/api/employees/${employee.empid}`, {
-      method: 'DELETE',
-    });
-    const data = await res.json();
-    if (data.success) {
-      setMessage('🗑️ Employee deleted successfully.');
-      setEmployee(null);
-      setSearchFields({ empid: '', fname: '', lname: '', dob: '', ssn: '' });
-      setConfirmationText('');
-    } else {
-      setMessage(data.error || 'Delete failed.');
+    try {
+      const res = await fetch(`http://localhost:5000/api/employees/${employee.empid}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setMessage(`Employee ${employee.Fname} ${employee.Lname} (ID: ${employee.empid}) was successfully deleted.`);
+        setEmployee(null);
+        setSearch({ empid: '', fname: '', lname: '', dob: '', ssn: '' });
+        setMode('');
+        setConfirmDelete(false);
+      } else {
+        setMessage(`Failed to delete employee. ${data.error || ''}`);
+      }
+    } catch {
+      setMessage('Server error while deleting employee.');
     }
   };
 
@@ -78,66 +90,47 @@ function ManageEmployee() {
       <AdminNavbar />
       <h1 className="text-2xl font-bold mb-4">Manage Employee</h1>
 
-      {!action ? (
-        <div className="space-x-4 mb-6">
-          <button className="bg-blue-600 text-white px-4 py-2" onClick={() => setAction('update')}>Update Employee</button>
-          <button className="bg-red-600 text-white px-4 py-2" onClick={() => setAction('delete')}>Delete Employee</button>
+      {!mode && (
+        <div className="space-y-4 mb-6">
+          <button onClick={() => setMode('update')} className="bg-blue-600 text-white px-4 py-2 w-full">Update Employee</button>
+          <button onClick={() => setMode('delete')} className="bg-red-600 text-white px-4 py-2 w-full">Delete Employee</button>
         </div>
-      ) : !employee ? (
+      )}
+
+      {mode && !employee && (
         <>
-          <h2 className="text-lg font-semibold mb-2">Search Employee</h2>
-          <div className="space-y-2 mb-4">
+          <h2 className="text-lg font-semibold mb-2">Search for Employee</h2>
+          {['empid', 'fname', 'lname', 'dob', 'ssn'].map(field => (
             <input
-              className="border p-2 w-full"
-              placeholder="Employee ID"
-              value={searchFields.empid}
-              onChange={(e) => setSearchFields({ ...searchFields, empid: e.target.value })}
+              key={field}
+              className="border p-2 w-full mb-2"
+              placeholder={`Enter ${field.toUpperCase()}`}
+              value={search[field]}
+              onChange={(e) => setSearch({ ...search, [field]: e.target.value })}
             />
-            <input
-              className="border p-2 w-full"
-              placeholder="First Name"
-              value={searchFields.fname}
-              onChange={(e) => setSearchFields({ ...searchFields, fname: e.target.value })}
-            />
-            <input
-              className="border p-2 w-full"
-              placeholder="Last Name"
-              value={searchFields.lname}
-              onChange={(e) => setSearchFields({ ...searchFields, lname: e.target.value })}
-            />
-            <input
-              className="border p-2 w-full"
-              placeholder="Date of Birth (YYYY-MM-DD)"
-              value={searchFields.dob}
-              onChange={(e) => setSearchFields({ ...searchFields, dob: e.target.value })}
-            />
-            <input
-              className="border p-2 w-full"
-              placeholder="SSN"
-              value={searchFields.ssn}
-              onChange={(e) => setSearchFields({ ...searchFields, ssn: e.target.value })}
-            />
-          </div>
-          <button onClick={handleSearch} className="bg-blue-700 text-white px-4 py-2">Search</button>
-          {message && <p className="text-red-600 mt-2">{message}</p>}
+          ))}
+          <button onClick={handleSearch} className="bg-blue-600 text-white px-4 py-2 w-full mb-4">Search</button>
+          {message && <p className="text-red-600 mb-2">{message}</p>}
         </>
-      ) : (
+      )}
+
+      {employee && (
         <>
           <div className="bg-white p-4 rounded shadow border mb-4">
             <p><strong>ID:</strong> {employee.empid}</p>
             <p><strong>Name:</strong> {employee.Fname} {employee.Lname}</p>
             <p><strong>Current Job:</strong> {employee.job_title}</p>
             <p><strong>Division:</strong> {employee.division_name}</p>
-            <p><strong>Salary:</strong> ${parseFloat(employee.Salary).toFixed(2)}</p>
+            <p><strong>Salary:</strong> ${parseFloat(employee.Salary || 0).toFixed(2)}</p>
           </div>
 
-          {action === 'update' ? (
+          {mode === 'update' && (
             <div className="space-y-3">
               <input
                 type="number"
                 className="border p-2 w-full"
-                placeholder={`New Salary (Leave blank to keep ${employee.Salary})`}
                 value={form.salary}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setForm({ ...form, salary: e.target.value })}
               />
               <select
@@ -162,23 +155,30 @@ function ManageEmployee() {
               </select>
               <button className="bg-green-600 text-white px-4 py-2 w-full" onClick={handleUpdate}>Submit Update</button>
             </div>
-          ) : (
+          )}
+
+          {mode === 'delete' && !confirmDelete && (
+            <button
+              className="mt-2 px-4 py-2 w-full text-white bg-red-600"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Confirm Delete Employee
+            </button>
+          )}
+
+          {mode === 'delete' && confirmDelete && (
             <div className="mt-4">
-              <label className="block font-medium mb-1">Type DELETE to confirm deletion</label>
-              <input
-                className="border p-2 w-full"
-                value={confirmationText}
-                onChange={(e) => setConfirmationText(e.target.value)}
-              />
-              <button
-                className={`mt-2 px-4 py-2 w-full text-white ${confirmationText === 'DELETE' ? 'bg-red-600' : 'bg-gray-400 cursor-not-allowed'}`}
-                disabled={confirmationText !== 'DELETE'}
-                onClick={handleDelete}
-              >
-                Confirm Delete
+              <p className="mb-2 font-medium">Are you sure you want to delete this employee?</p>
+              <button className="bg-red-700 text-white px-4 py-2 w-full mb-2" onClick={handleDelete}>
+                Yes, Delete
+              </button>
+              <button className="bg-gray-400 text-white px-4 py-2 w-full" onClick={() => setConfirmDelete(false)}>
+                Cancel
               </button>
             </div>
           )}
+
+          {message && <p className="mt-4 text-blue-700 font-semibold">{message}</p>}
         </>
       )}
     </div>

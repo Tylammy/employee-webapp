@@ -21,7 +21,7 @@ function EmployeeInfo() {
     })
       .catch((err) => {
         console.error(err);
-        setError('❌ Failed to load employee info.');
+        setError('Failed to load employee info.');
       });
   }, [username]);
 

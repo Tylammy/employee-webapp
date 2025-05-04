@@ -14,9 +14,7 @@ function EmployeeNavbar() {
       <ul className="flex space-x-4">
         <li><Link to="/employee/info">My Info</Link></li>
         <li><Link to="/employee/payroll">Pay History</Link></li>
-        <li>
-          <button onClick={handleLogout}>Logout</button>
-        </li>
+        <li><button onClick={handleLogout}>Logout</button></li>
       </ul>
     </nav>
   );

@@ -128,10 +128,14 @@ app.get('/api/employees/search', (req, res) => {
 
 // Route: Get employee by flexible criteria (for update search)
 app.get('/api/employee/flex-search', (req, res) => {
-  const { ssn, fname, lname, dob } = req.query;
+  const { ssn, fname, lname, dob, empid } = req.query;
   const filters = [];
   const values = [];
 
+  if (empid) {
+    filters.push('e.empid = ?');
+    values.push(empid);
+  }
   if (ssn) {
     filters.push('e.SSN = ?');
     values.push(ssn);
@@ -172,7 +176,6 @@ app.get('/api/employee/flex-search', (req, res) => {
 });
 
 // Route: Update employee info (only modified fields)
-
 app.put('/api/employees/update/:empid', (req, res) => {
   const empid = req.params.empid;
   const { salary, job_title_id, division_id } = req.body;
@@ -196,7 +199,9 @@ app.put('/api/employees/update/:empid', (req, res) => {
 
   if (tasks.length === 0) return res.status(400).json({ error: 'No update fields provided' });
 
-  let completed = 0, failed = false;
+  let completed = 0;
+  let failed = false;
+
   tasks.forEach(task => {
     task(err => {
       if (err && !failed) {
@@ -342,34 +347,29 @@ app.get('/api/employee/:id', (req, res) => {
 
 app.delete('/api/employees/:id', (req, res) => {
   const empid = req.params.id;
-  db.query('DELETE FROM employees WHERE empid = ?', [empid], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to delete employee' });
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Employee not found' });
-    res.json({ success: true });
-  });
-});
 
-app.get('/api/employee/email/:email', (req, res) => {
-  const email = req.params.email;
+  const queries = [
+    'DELETE FROM payroll WHERE empid = ?',
+    'DELETE FROM employee_job_titles WHERE empid = ?',
+    'DELETE FROM employee_division WHERE empid = ?',
+    'DELETE FROM address WHERE empid = ?',
+    'DELETE FROM employees WHERE empid = ?'
+  ];
 
-  const sql = `
-    SELECT e.empid, e.Fname, e.Lname, e.email, e.HireDate, e.Salary, e.SSN,
-           jt.job_title_id, jt.job_title, d.ID as division_id, d.Name as division_name, a.DOB,
-           RIGHT(e.SSN, 4) AS last4SSN
-    FROM employees e
-    LEFT JOIN address a ON e.empid = a.empid
-    LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid
-    LEFT JOIN job_titles jt ON ejt.job_title_id = jt.job_title_id
-    LEFT JOIN employee_division ed ON e.empid = ed.empid
-    LEFT JOIN division d ON ed.div_ID = d.ID
-    WHERE e.email = ?
-    LIMIT 1
-  `;
+  let completed = 0;
+  let failed = false;
 
-  db.query(sql, [email], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch employee by email' });
-    if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
-    res.json(results[0]);
+  queries.forEach(query => {
+    db.query(query, [empid], (err) => {
+      if (err && !failed) {
+        failed = true;
+        return res.status(500).json({ error: 'Failed to delete related records' });
+      }
+      completed++;
+      if (completed === queries.length && !failed) {
+        res.json({ success: true });
+      }
+    });
   });
 });
 

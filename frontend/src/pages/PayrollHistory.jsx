@@ -19,7 +19,7 @@ function PayrollHistory() {
       })
       .catch((err) => {
         console.error(err);
-        setError('❌ Failed to load payroll history.');
+        setError('Failed to load payroll history.');
       });
   }, [username]);
 

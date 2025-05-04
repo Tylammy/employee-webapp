@@ -26,14 +26,14 @@ function LoginPage() {
         } else if (data.role === 'employee') {
           navigate('/employee');
         } else {
-          alert('⚠️ Unknown role: ' + data.role);
+          alert('Unknown role: ' + data.role);
         }
       } else {
-        alert('❌ Login failed: ' + (data.message || 'Invalid credentials'));
+        alert('Login failed: ' + (data.message || 'Invalid credentials'));
       }
     } catch (err) {
-      console.error('❌ Server error during login:', err);
-      alert('❌ Server error. Please try again later.');
+      console.error('Server error during login:', err);
+      alert('Server error. Please try again later.');
     }
   };
 

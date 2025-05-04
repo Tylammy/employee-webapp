@@ -1,4 +1,4 @@
-// ✅ Updated EmployeeList.jsx
+// Updated EmployeeList.jsx
 import React, { useEffect, useState } from 'react';
 import AdminNavbar from '../components/AdminNavbar';
 

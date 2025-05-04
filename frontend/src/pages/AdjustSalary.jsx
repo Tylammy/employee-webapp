@@ -13,7 +13,7 @@ function AdjustSalary() {
     setError('');
 
     if (!percent || !min || !max) {
-      setError('⚠️ Please fill in all fields.');
+      setError('Please fill in all fields.');
       return;
     }
 
@@ -30,13 +30,13 @@ function AdjustSalary() {
 
       const data = await res.json();
       if (data.success) {
-        setMessage(`✅ Adjusted salaries for ${data.affectedRows} employee(s).`);
+        setMessage(`Adjusted salaries for ${data.affectedRows} employee(s).`);
       } else {
-        setError(data.error || '❌ Adjustment failed.');
+        setError(data.error || 'Adjustment failed.');
       }
     } catch (err) {
       console.error(err);
-      setError('❌ Server error.');
+      setError('Server error.');
     }
   };
 

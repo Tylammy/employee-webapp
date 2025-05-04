@@ -12,7 +12,7 @@ function SearchEmployee() {
 
   const handleSearch = async () => {
     if (!fname && !lname && !empid && !dob && !ssn) {
-      setError('⚠️ Please enter at least one search field.');
+      setError('Please enter at least one search field.');
       setResults([]);
       return;
     }
@@ -24,7 +24,7 @@ function SearchEmployee() {
       const data = await res.json();
 
       if (data.length === 0) {
-        setError('❌ No employee found.');
+        setError('No employee found.');
         setResults([]);
       } else {
         setResults(data);
@@ -32,7 +32,7 @@ function SearchEmployee() {
       }
     } catch (err) {
       console.error(err);
-      setError('❌ Server error. Try again.');
+      setError('Server error. Try again.');
       setResults([]);
     }
   };

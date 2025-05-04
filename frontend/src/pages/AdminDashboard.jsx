@@ -24,6 +24,9 @@ function AdminDashboard() {
         <button className="bg-blue-600 text-white px-6 py-3" onClick={() => navigate('/admin/payroll')}>
           View Payroll Reports
         </button>
+        <button className="bg-blue-600 text-white px-6 py-3" onClick={() => {localStorage.clear(); navigate('/');}}>
+          Logout
+        </button>
       </div>
     </div>
   );
