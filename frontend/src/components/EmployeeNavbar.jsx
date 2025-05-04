@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom';
 
 function EmployeeNavbar() {
   const navigate = useNavigate();
@@ -10,12 +10,12 @@ function EmployeeNavbar() {
   };
 
   return (
-    <nav className="bg-blue-700 text-white p-3 mb-4">
-      <ul className="flex space-x-4">
-        <li><Link to="/employee/info">My Info</Link></li>
-        <li><Link to="/employee/payroll">Pay History</Link></li>
-        <li><button onClick={handleLogout}>Logout</button></li>
-      </ul>
+    <nav className="bg-blue-700 text-white">
+      <div className="flex">
+        <Link to="/employee/info" className="nav-button">My Info</Link>
+        <Link to="/employee/payroll" className="nav-button">Pay History</Link>
+        <button onClick={handleLogout} className="nav-button">Logout</button>
+      </div>
     </nav>
   );
 }
