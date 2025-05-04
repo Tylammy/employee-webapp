@@ -12,7 +12,7 @@ function AdminDashboard() {
         <button className="bg-blue-600 text-white px-6 py-3" onClick={() => navigate('/admin/search')}>
           Search Employees
         </button>
-        <button className="bg-red-600 text-white px-6 py-3" onClick={() => navigate('/admin/manage-employees')}>
+        <button className="bg-red-600 text-white px-6 py-3" onClick={() => navigate('/admin/manage-employee')}>
           Manage Employees
         </button>
         <button className="bg-blue-600 text-white px-6 py-3" onClick={() => navigate('/admin/salary-adjust')}>

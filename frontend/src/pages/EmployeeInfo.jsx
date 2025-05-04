@@ -36,7 +36,7 @@ function EmployeeInfo() {
         <li><strong>Name:</strong> {employee.Fname} {employee.Lname}</li>
         <li><strong>Email:</strong> {employee.email}</li>
         <li><strong>Hire Date:</strong> {employee.HireDate?.substring(0, 10)}</li>
-        <li><strong>Salary:</strong> ${Number(employee.Salary).toFixed(2)}</li>
+        <li><strong>Salary:</strong> ${parseFloat(employee.Salary).toFixed(2)}</li>
         <li><strong>Job Title:</strong> {employee.job_title || 'N/A'}</li>
         <li><strong>Division:</strong> {employee.division_name || 'N/A'}</li>
         <li><strong>SSN (Last 4):</strong> ****-**-{employee.last4SSN}</li>

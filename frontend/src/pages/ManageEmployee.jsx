@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from '../components/AdminNavbar';
 
 function ManageEmployee() {
-  const [empid, setEmpid] = useState('');
+  const [action, setAction] = useState('');
+  const [searchFields, setSearchFields] = useState({ empid: '', fname: '', lname: '', dob: '', ssn: '' });
   const [employee, setEmployee] = useState(null);
   const [jobTitles, setJobTitles] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -16,10 +17,25 @@ function ManageEmployee() {
   }, []);
 
   const handleSearch = async () => {
-    const res = await fetch(`http://localhost:5000/api/employee/${empid}`);
+    const { empid, fname, lname, dob, ssn } = searchFields;
+    const hasInput = empid || fname || lname || dob || ssn;
+    if (!hasInput) {
+      setMessage('Please fill in at least one search field.');
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (empid) params.append('empid', empid);
+    if (fname) params.append('fname', fname);
+    if (lname) params.append('lname', lname);
+    if (dob) params.append('dob', dob);
+    if (ssn) params.append('ssn', ssn);
+
+    const res = await fetch(`http://localhost:5000/api/employees/search?${params}`);
     const data = await res.json();
-    if (data.empid) {
-      setEmployee(data);
+
+    if (Array.isArray(data) && data.length > 0) {
+      setEmployee(data[0]);
       setForm({ salary: '', job_title_id: '', division_id: '' });
       setMessage('');
     } else {
@@ -33,13 +49,13 @@ function ManageEmployee() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        salary: form.salary || employee.Salary,
+        salary: parseFloat(form.salary || employee.Salary),
         job_title_id: form.job_title_id || employee.job_title_id,
         division_id: form.division_id || employee.division_id,
       }),
     });
     const data = await res.json();
-    setMessage(data.success ? 'Employee updated successfully.' : (data.error || 'Update failed.'));
+    setMessage(data.success ? '✅ Employee updated successfully.' : (data.error || 'Update failed.'));
   };
 
   const handleDelete = async () => {
@@ -48,9 +64,9 @@ function ManageEmployee() {
     });
     const data = await res.json();
     if (data.success) {
-      setMessage('Employee deleted successfully.');
+      setMessage('🗑️ Employee deleted successfully.');
       setEmployee(null);
-      setEmpid('');
+      setSearchFields({ empid: '', fname: '', lname: '', dob: '', ssn: '' });
       setConfirmationText('');
     } else {
       setMessage(data.error || 'Delete failed.');
@@ -62,57 +78,91 @@ function ManageEmployee() {
       <AdminNavbar />
       <h1 className="text-2xl font-bold mb-4">Manage Employee</h1>
 
-      <input
-        className="border p-2 w-full mb-2"
-        placeholder="Enter Employee ID"
-        value={empid}
-        onChange={(e) => setEmpid(e.target.value)}
-      />
-      <button onClick={handleSearch} className="bg-blue-600 text-white px-4 py-2 mb-4">Search</button>
-
-      {message && <p className="text-red-600">{message}</p>}
-
-      {employee && (
+      {!action ? (
+        <div className="space-x-4 mb-6">
+          <button className="bg-blue-600 text-white px-4 py-2" onClick={() => setAction('update')}>Update Employee</button>
+          <button className="bg-red-600 text-white px-4 py-2" onClick={() => setAction('delete')}>Delete Employee</button>
+        </div>
+      ) : !employee ? (
+        <>
+          <h2 className="text-lg font-semibold mb-2">Search Employee</h2>
+          <div className="space-y-2 mb-4">
+            <input
+              className="border p-2 w-full"
+              placeholder="Employee ID"
+              value={searchFields.empid}
+              onChange={(e) => setSearchFields({ ...searchFields, empid: e.target.value })}
+            />
+            <input
+              className="border p-2 w-full"
+              placeholder="First Name"
+              value={searchFields.fname}
+              onChange={(e) => setSearchFields({ ...searchFields, fname: e.target.value })}
+            />
+            <input
+              className="border p-2 w-full"
+              placeholder="Last Name"
+              value={searchFields.lname}
+              onChange={(e) => setSearchFields({ ...searchFields, lname: e.target.value })}
+            />
+            <input
+              className="border p-2 w-full"
+              placeholder="Date of Birth (YYYY-MM-DD)"
+              value={searchFields.dob}
+              onChange={(e) => setSearchFields({ ...searchFields, dob: e.target.value })}
+            />
+            <input
+              className="border p-2 w-full"
+              placeholder="SSN"
+              value={searchFields.ssn}
+              onChange={(e) => setSearchFields({ ...searchFields, ssn: e.target.value })}
+            />
+          </div>
+          <button onClick={handleSearch} className="bg-blue-700 text-white px-4 py-2">Search</button>
+          {message && <p className="text-red-600 mt-2">{message}</p>}
+        </>
+      ) : (
         <>
           <div className="bg-white p-4 rounded shadow border mb-4">
             <p><strong>ID:</strong> {employee.empid}</p>
             <p><strong>Name:</strong> {employee.Fname} {employee.Lname}</p>
             <p><strong>Current Job:</strong> {employee.job_title}</p>
             <p><strong>Division:</strong> {employee.division_name}</p>
-            <p><strong>Salary:</strong> ${employee.Salary}</p>
+            <p><strong>Salary:</strong> ${parseFloat(employee.Salary).toFixed(2)}</p>
           </div>
 
-          <div className="space-y-3">
-            <input
-              type="number"
-              className="border p-2 w-full"
-              placeholder={`New Salary (Leave blank to keep ${employee.Salary})`}
-              value={form.salary}
-              onChange={(e) => setForm({ ...form, salary: e.target.value })}
-            />
-            <select
-              className="border p-2 w-full"
-              value={form.job_title_id}
-              onChange={(e) => setForm({ ...form, job_title_id: e.target.value })}
-            >
-              <option value="">Keep Current Job Title</option>
-              {jobTitles.map(j => (
-                <option key={j.job_title_id} value={j.job_title_id}>{j.job_title}</option>
-              ))}
-            </select>
-            <select
-              className="border p-2 w-full"
-              value={form.division_id}
-              onChange={(e) => setForm({ ...form, division_id: e.target.value })}
-            >
-              <option value="">Keep Current Division</option>
-              {divisions.map(d => (
-                <option key={d.ID} value={d.ID}>{d.Name}</option>
-              ))}
-            </select>
-
-            <button className="bg-green-600 text-white px-4 py-2 w-full" onClick={handleUpdate}>Submit Update</button>
-
+          {action === 'update' ? (
+            <div className="space-y-3">
+              <input
+                type="number"
+                className="border p-2 w-full"
+                placeholder={`New Salary (Leave blank to keep ${employee.Salary})`}
+                value={form.salary}
+                onChange={(e) => setForm({ ...form, salary: e.target.value })}
+              />
+              <select
+                className="border p-2 w-full"
+                value={form.job_title_id}
+                onChange={(e) => setForm({ ...form, job_title_id: e.target.value })}
+              >
+                <option value="">Keep Current Job Title</option>
+                {jobTitles.map(j => (
+                  <option key={j.job_title_id} value={j.job_title_id}>{j.job_title}</option>
+                ))}
+              </select>
+              <select
+                className="border p-2 w-full"
+                value={form.division_id}
+                onChange={(e) => setForm({ ...form, division_id: e.target.value })}
+              >
+                <option value="">Keep Current Division</option>
+                {divisions.map(d => (
+                  <option key={d.ID} value={d.ID}>{d.Name}</option>
+                ))}
+              </select>
+              <button className="bg-green-600 text-white px-4 py-2 w-full" onClick={handleUpdate}>Submit Update</button>
+            </div>
+          ) : (
             <div className="mt-4">
               <label className="block font-medium mb-1">Type DELETE to confirm deletion</label>
               <input
@@ -128,7 +178,7 @@ function ManageEmployee() {
                 Confirm Delete
               </button>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
